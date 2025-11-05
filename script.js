@@ -25,9 +25,9 @@ const player = {
 
 // 장애물 (shit.jpeg) 설정
 let obstacles = [];
-let obstacleSpeed = 3.5; 
-let obstacleSpawnRate = 60; // 생성 빈도는 유지
-const MAX_SPAWN_COUNT = 5; // ⬅️ **핵심 변경: 한 번에 최대 5개까지 생성!**
+let obstacleSpeed = 6; 
+let obstacleSpawnRate = 100; // 생성 빈도는 유지
+const MAX_SPAWN_COUNT = 7; // ⬅️ **핵심 변경: 한 번에 최대 5개까지 생성!**
 
 // 키티 벌 이미지 로드
 const playerImage = new Image();
@@ -52,7 +52,7 @@ function startGame() {
     player.dx = 0;
     player.dy = 0;
 
-    obstacleSpeed = 3.5; 
+    obstacleSpeed = 6; 
     
     if (animationFrameId) cancelAnimationFrame(animationFrameId);
     gameLoop();
@@ -71,7 +71,7 @@ function drawPlayer() {
 function spawnObstacle() {
     // 3초마다 속도 증가 (난이도 급상승)
     const elapsedSeconds = (Date.now() - startTime) / 1000;
-    obstacleSpeed = 3.5 + Math.floor(elapsedSeconds / 3) * 0.8; 
+    obstacleSpeed = 6 + Math.floor(elapsedSeconds / 3) * 0.8; 
 
     if (Math.random() < 1 / obstacleSpawnRate) {
         // ⭐️⭐️⭐️ 이 부분이 중요합니다: 네다섯 개를 한 번에 생성합니다. ⭐️⭐️⭐️
