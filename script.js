@@ -23,21 +23,22 @@ const player = {
     dy: 0  
 };
 
-// 장애물 (shit.jpeg) 설정
+// 장애물 (shit.png) 설정
 let obstacles = [];
 let obstacleSpeed = 3.5; 
-// ⭐️⭐️⭐️ 생성 빈도 극대화 (숫자를 낮출수록 자주 생성) ⭐️⭐️⭐️
-let obstacleSpawnRate = 20; // 이전 60 -> 20 으로 대폭 감소
+// ⭐️⭐️⭐️ 생성 빈도 감소 (20 -> 60, 약 1/3 수준으로 감소) ⭐️⭐️⭐️
+let obstacleSpawnRate = 60; 
 
-// ⭐️⭐️⭐️ 한 번에 생성되는 개수 증가 (최대 10개) ⭐️⭐️⭐️
-const MAX_SPAWN_COUNT = 10; 
+// ⭐️⭐️⭐️ 한 번에 생성되는 개수 감소 (최대 3개) ⭐️⭐️⭐️
+const MAX_SPAWN_COUNT = 3; 
 
 // 키티 벌 이미지 로드
 const playerImage = new Image();
 playerImage.src = 'cat.png'; 
 
-// 💩 shit.jpeg 이미지 로드
+// 💩 shit.png 이미지 로드 (파일 확장자 변경!)
 const obstacleImage = new Image();
+// ❗️❗️❗️ 장애물 이미지를 shit.png로 설정합니다. ❗️❗️❗️
 obstacleImage.src = 'shit.png'; 
 
 // ----------------------------------------------------
@@ -72,27 +73,25 @@ function drawPlayer() {
 
 // 장애물 생성 (똥 이미지 우르르 생성 로직)
 function spawnObstacle() {
-    // 3초마다 속도 증가 (난이도 급상승)
+    // 3초마다 속도 증가 (난이도 상승)
     const elapsedSeconds = (Date.now() - startTime) / 1000;
     obstacleSpeed = 3.5 + Math.floor(elapsedSeconds / 3) * 0.8; 
 
-    // ⭐️⭐️⭐️ 빈도 조건 만족 시 여러 개 생성 ⭐️⭐️⭐️
+    // 빈도 조건 만족 시 여러 개 생성
     if (Math.random() < 1 / obstacleSpawnRate) {
-        // 3개 ~ MAX_SPAWN_COUNT(10개) 사이 랜덤 생성
-        const spawnCount = Math.floor(Math.random() * (MAX_SPAWN_COUNT - 3 + 1)) + 3; 
+        // 1개 ~ MAX_SPAWN_COUNT(3개) 사이 랜덤 생성
+        const spawnCount = Math.floor(Math.random() * MAX_SPAWN_COUNT) + 1; 
         
         for (let i = 0; i < spawnCount; i++) {
             const size = 30; // 크기 고정
             
-            // x 위치는 캔버스 전체에서 무작위로 생성
-            // 겹치지 않도록 약간의 간격을 줄 수도 있지만, 여기서는 무작위로 겹치게 함
             const x = Math.random() * canvas.width; 
             
             obstacles.push({
                 x: x,
                 y: -size,
-                size: size, // 충돌 감지에 사용
-                width: 30, // 이미지 그릴 때 사용
+                size: size, 
+                width: 30, 
                 height: 30
             });
         }
@@ -105,12 +104,10 @@ function updateObstacles() {
         const obs = obstacles[i];
         obs.y += obstacleSpeed; 
         
-        // 💩 이미지 그리기 (이미지 로드 완료 확인)
         if (obstacleImage.complete) {
             ctx.drawImage(obstacleImage, obs.x - obs.width / 2, obs.y - obs.height / 2, obs.width, obs.height);
         }
 
-        // 화면 밖으로 나가면 제거
         if (obs.y > canvas.height + obs.height) {
             obstacles.splice(i, 1);
         }
