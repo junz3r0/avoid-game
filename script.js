@@ -20,25 +20,29 @@ const player = {
     height: 50,
     speed: 6, 
     dx: 0,
-    dy: 0  
+    dy: 0,
+    // ⭐️⭐️⭐️ 키티의 실제 충돌 판정 영역 (이미지보다 작게) ⭐️⭐️⭐️
+    hitboxWidth: 40, 
+    hitboxHeight: 40
 };
 
 // 장애물 (shit.png) 설정
 let obstacles = [];
 let obstacleSpeed = 3.5; 
-// ⭐️⭐️⭐️ 생성 빈도 감소 (20 -> 60, 약 1/3 수준으로 감소) ⭐️⭐️⭐️
-let obstacleSpawnRate = 60; 
+// ⭐️⭐️⭐️ 생성 빈도 감소 (60 -> 120, 약 절반 수준으로 감소) ⭐️⭐️⭐️
+let obstacleSpawnRate = 120; 
 
-// ⭐️⭐️⭐️ 한 번에 생성되는 개수 감소 (최대 3개) ⭐️⭐️⭐️
+// 한 번에 생성되는 개수는 1개 ~ 최대 3개로 유지
 const MAX_SPAWN_COUNT = 3; 
+// ⭐️⭐️⭐️ 똥 이미지의 실제 충돌 판정 영역 (이미지보다 작게) ⭐️⭐️⭐️
+const OBSTACLE_HITBOX_SIZE = 20; // 이미지 크기 30x30인데 판정은 20x20
 
 // 키티 벌 이미지 로드
 const playerImage = new Image();
 playerImage.src = 'cat.png'; 
 
-// 💩 shit.png 이미지 로드 (파일 확장자 변경!)
+// 💩 shit.png 이미지 로드
 const obstacleImage = new Image();
-// ❗️❗️❗️ 장애물 이미지를 shit.png로 설정합니다. ❗️❗️❗️
 obstacleImage.src = 'shit.png'; 
 
 // ----------------------------------------------------
@@ -69,30 +73,32 @@ function drawPlayer() {
         ctx.fillStyle = 'red';
         ctx.fillRect(player.x - player.width / 2, player.y - player.height / 2, player.width, player.height);
     }
+    // ❗️ 디버깅용: 플레이어 히트박스 시각화 (게임 완성 후 삭제)
+    // ctx.strokeStyle = 'lime';
+    // ctx.strokeRect(player.x - player.hitboxWidth / 2, player.y - player.hitboxHeight / 2, player.hitboxWidth, player.hitboxHeight);
 }
 
-// 장애물 생성 (똥 이미지 우르르 생성 로직)
+// 장애물 생성
 function spawnObstacle() {
-    // 3초마다 속도 증가 (난이도 상승)
     const elapsedSeconds = (Date.now() - startTime) / 1000;
     obstacleSpeed = 3.5 + Math.floor(elapsedSeconds / 3) * 0.8; 
 
-    // 빈도 조건 만족 시 여러 개 생성
     if (Math.random() < 1 / obstacleSpawnRate) {
-        // 1개 ~ MAX_SPAWN_COUNT(3개) 사이 랜덤 생성
         const spawnCount = Math.floor(Math.random() * MAX_SPAWN_COUNT) + 1; 
         
         for (let i = 0; i < spawnCount; i++) {
-            const size = 30; // 크기 고정
+            const size = 30; // 이미지 크기 고정
             
             const x = Math.random() * canvas.width; 
             
             obstacles.push({
                 x: x,
                 y: -size,
-                size: size, 
+                size: size, // 이미지 그릴 때 사용
                 width: 30, 
-                height: 30
+                height: 30,
+                // ⭐️⭐️⭐️ 똥의 실제 충돌 판정 크기 ⭐️⭐️⭐️
+                hitboxSize: OBSTACLE_HITBOX_SIZE
             });
         }
     }
@@ -108,20 +114,37 @@ function updateObstacles() {
             ctx.drawImage(obstacleImage, obs.x - obs.width / 2, obs.y - obs.height / 2, obs.width, obs.height);
         }
 
+        // ❗️ 디버깅용: 장애물 히트박스 시각화 (게임 완성 후 삭제)
+        // ctx.strokeStyle = 'yellow';
+        // ctx.strokeRect(obs.x - obs.hitboxSize / 2, obs.y - obs.hitboxSize / 2, obs.hitboxSize, obs.hitboxSize);
+
+
         if (obs.y > canvas.height + obs.height) {
             obstacles.splice(i, 1);
         }
     }
 }
 
-// 충돌 감지 (사각형 충돌)
+// 충돌 감지 (사각형 충돌 - 히트박스 사용)
 function checkCollision() {
     for (const obs of obstacles) {
+        // ⭐️⭐️⭐️ 히트박스 영역을 계산 ⭐️⭐️⭐️
+        const playerHitboxLeft = player.x - player.hitboxWidth / 2;
+        const playerHitboxRight = player.x + player.hitboxWidth / 2;
+        const playerHitboxTop = player.y - player.hitboxHeight / 2;
+        const playerHitboxBottom = player.y + player.hitboxHeight / 2;
+
+        const obstacleHitboxLeft = obs.x - obs.hitboxSize / 2;
+        const obstacleHitboxRight = obs.x + obs.hitboxSize / 2;
+        const obstacleHitboxTop = obs.y - obs.hitboxSize / 2;
+        const obstacleHitboxBottom = obs.y + obs.hitboxSize / 2;
+
+        // AABB 충돌 감지
         if (
-            player.x - player.width / 2 < obs.x + obs.width / 2 &&
-            player.x + player.width / 2 > obs.x - obs.width / 2 &&
-            player.y - player.height / 2 < obs.y + obs.height / 2 &&
-            player.y + player.height / 2 > obs.y - obs.height / 2
+            playerHitboxLeft < obstacleHitboxRight &&
+            playerHitboxRight > obstacleHitboxLeft &&
+            playerHitboxTop < obstacleHitboxBottom &&
+            playerHitboxBottom > obstacleHitboxTop
         ) {
             endGame();
             return true;
@@ -142,10 +165,11 @@ function updatePlayer() {
     player.x += player.dx;
     player.y += player.dy;
 
-    if (player.x < player.width / 2) player.x = player.width / 2;
-    if (player.x > canvas.width - player.width / 2) player.x = canvas.width - player.width / 2;
-    if (player.y < player.height / 2) player.y = player.height / 2;
-    if (player.y > canvas.height - player.height / 2) player.y = canvas.height - player.height / 2;
+    // 경계 처리 (히트박스 기준으로)
+    if (player.x < player.hitboxWidth / 2) player.x = player.hitboxWidth / 2;
+    if (player.x > canvas.width - player.hitboxWidth / 2) player.x = canvas.width - player.hitboxWidth / 2;
+    if (player.y < player.hitboxHeight / 2) player.y = player.hitboxHeight / 2;
+    if (player.y > canvas.height - player.hitboxHeight / 2) player.y = canvas.height - player.hitboxHeight / 2;
 }
 
 function updateTimer() {
