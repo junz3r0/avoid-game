@@ -38,7 +38,7 @@ playerImage.src = 'cat.png';
 
 // 💩 shit.jpeg 이미지 로드
 const obstacleImage = new Image();
-obstacleImage.src = 'shit.jpeg'; 
+obstacleImage.src = 'shit.png'; 
 
 // ----------------------------------------------------
 // 2. 게임 함수
