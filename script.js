@@ -25,9 +25,12 @@ const player = {
 
 // 장애물 (shit.jpeg) 설정
 let obstacles = [];
-let obstacleSpeed = 6; 
-let obstacleSpawnRate = 100; // 생성 빈도는 유지
-const MAX_SPAWN_COUNT = 7; // ⬅️ **핵심 변경: 한 번에 최대 5개까지 생성!**
+let obstacleSpeed = 3.5; 
+// ⭐️⭐️⭐️ 생성 빈도 극대화 (숫자를 낮출수록 자주 생성) ⭐️⭐️⭐️
+let obstacleSpawnRate = 20; // 이전 60 -> 20 으로 대폭 감소
+
+// ⭐️⭐️⭐️ 한 번에 생성되는 개수 증가 (최대 10개) ⭐️⭐️⭐️
+const MAX_SPAWN_COUNT = 10; 
 
 // 키티 벌 이미지 로드
 const playerImage = new Image();
@@ -52,7 +55,7 @@ function startGame() {
     player.dx = 0;
     player.dy = 0;
 
-    obstacleSpeed = 6; 
+    obstacleSpeed = 3.5; 
     
     if (animationFrameId) cancelAnimationFrame(animationFrameId);
     gameLoop();
@@ -71,23 +74,25 @@ function drawPlayer() {
 function spawnObstacle() {
     // 3초마다 속도 증가 (난이도 급상승)
     const elapsedSeconds = (Date.now() - startTime) / 1000;
-    obstacleSpeed = 6 + Math.floor(elapsedSeconds / 3) * 0.8; 
+    obstacleSpeed = 3.5 + Math.floor(elapsedSeconds / 3) * 0.8; 
 
+    // ⭐️⭐️⭐️ 빈도 조건 만족 시 여러 개 생성 ⭐️⭐️⭐️
     if (Math.random() < 1 / obstacleSpawnRate) {
-        // ⭐️⭐️⭐️ 이 부분이 중요합니다: 네다섯 개를 한 번에 생성합니다. ⭐️⭐️⭐️
-        const spawnCount = Math.floor(Math.random() * (MAX_SPAWN_COUNT - 3 + 1)) + 3; // 3개 ~ 5개 사이 랜덤
+        // 3개 ~ MAX_SPAWN_COUNT(10개) 사이 랜덤 생성
+        const spawnCount = Math.floor(Math.random() * (MAX_SPAWN_COUNT - 3 + 1)) + 3; 
         
         for (let i = 0; i < spawnCount; i++) {
             const size = 30; // 크기 고정
             
             // x 위치는 캔버스 전체에서 무작위로 생성
+            // 겹치지 않도록 약간의 간격을 줄 수도 있지만, 여기서는 무작위로 겹치게 함
             const x = Math.random() * canvas.width; 
             
             obstacles.push({
                 x: x,
                 y: -size,
-                size: size,
-                width: 30, 
+                size: size, // 충돌 감지에 사용
+                width: 30, // 이미지 그릴 때 사용
                 height: 30
             });
         }
@@ -100,10 +105,12 @@ function updateObstacles() {
         const obs = obstacles[i];
         obs.y += obstacleSpeed; 
         
+        // 💩 이미지 그리기 (이미지 로드 완료 확인)
         if (obstacleImage.complete) {
             ctx.drawImage(obstacleImage, obs.x - obs.width / 2, obs.y - obs.height / 2, obs.width, obs.height);
         }
 
+        // 화면 밖으로 나가면 제거
         if (obs.y > canvas.height + obs.height) {
             obstacles.splice(i, 1);
         }
@@ -208,7 +215,6 @@ function updateMovement() {
 restartButton.addEventListener('click', startGame);
 
 window.onload = () => {
-    // 키티 이미지와 장애물 이미지 모두 로드되었을 때 시작
     let imagesLoaded = 0;
     const totalImages = 2;
     
