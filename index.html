@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>키티 벌 피하기 챌린지</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="game-container">
+        <div id="status-bar">
+            <span id="timer">시간: 0.00초</span>
+        </div>
+        
+        <canvas id="gameCanvas" width="800" height="500"></canvas>
+        
+        <div id="game-over-screen" class="hidden">
+            <h1>게임 오버!</h1>
+            <p>최종 기록: <span id="final-time">0.00</span>초</p>
+            <button id="restart-button">다시 시작하기</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
